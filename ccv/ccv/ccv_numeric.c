@@ -9,6 +9,15 @@
 #include "3rdparty/kissfft/kissf_fftndr.h"
 #endif
 
+const ccv_minimize_param_t ccv_minimize_default_params = {
+	.interp = 0.1,
+	.extrap = 3.0,
+	.max_iter = 20,
+	.ratio = 10.0,
+	.sig = 0.1,
+	.rho = 0.05,
+};
+
 void ccv_invert(ccv_matrix_t* a, ccv_matrix_t** b, int type)
 {
 }
@@ -176,7 +185,7 @@ void ccv_minimize(ccv_dense_matrix_t* x, int length, double red, ccv_minimize_f 
 			{
 				m--;
 				k += eh;
-				sp = s->data.u8;
+				unsigned char* sp = s->data.u8;
 				unsigned char* xp = x->data.u8;
 				unsigned char* xnp = xn->data.u8;
 				for (i = 0; i < x->rows; i++)
@@ -200,7 +209,7 @@ void ccv_minimize(ccv_dense_matrix_t* x, int length, double red, ccv_minimize_f 
 			}
 			d3 = 0;
 			unsigned char* df3p = df3->data.u8;
-			sp = s->data.u8;
+			unsigned char* sp = s->data.u8;
 			for (i = 0; i < x->rows; i++)
 			{
 				for (j = 0; j < x->cols; j++)
@@ -284,7 +293,7 @@ void ccv_minimize(ccv_dense_matrix_t* x, int length, double red, ccv_minimize_f 
 			double df0_df3 = 0;
 			double df3_df3 = 0;
 			double df0_df0 = 0;
-			df0p = df0->data.u8;
+			unsigned char* df0p = df0->data.u8;
 			unsigned char* df3p = df3->data.u8;
 			for (i = 0; i < x->rows; i++)
 			{
@@ -299,7 +308,7 @@ void ccv_minimize(ccv_dense_matrix_t* x, int length, double red, ccv_minimize_f 
 			}
 			double slr = (df3_df3 - df0_df3) / df0_df0;
 			df3p = df3->data.u8;
-			sp = s->data.u8;
+			unsigned char* sp = s->data.u8;
 			for (i = 0; i < x->rows; i++)
 			{
 				for (j = 0; j < x->cols; j++)
@@ -347,8 +356,8 @@ void ccv_minimize(ccv_dense_matrix_t* x, int length, double red, ccv_minimize_f 
 			if (ls_failed)
 				break;
 			d0 = 0;
-			df0p = df0->data.u8;
-			sp = s->data.u8;
+			unsigned char* df0p = df0->data.u8;
+			unsigned char* sp = s->data.u8;
 			for (i = 0; i < x->rows; i++)
 			{
 				for (j = 0; j < x->cols; j++)

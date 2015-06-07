@@ -182,7 +182,7 @@ static void _ccv_cache_lru(ccv_cache_t* cache)
 	for (i = 0; i < 10; i++)
 	{
 		ccv_cache_index_t* old_branch = branch;
-		leaf = branch->terminal.off & 0x1;
+		int leaf = branch->terminal.off & 0x1;
 		if (leaf)
 		{
 			ccv_cache_delete(cache, branch->terminal.sign);
@@ -396,9 +396,8 @@ void* ccv_cache_out(ccv_cache_t* cache, uint64_t sign, uint8_t* type)
 	uint32_t size = CCV_GET_TERMINAL_SIZE(branch->terminal.type);
 	if (branch != &cache->origin)
 	{
-		j = 63;
-		uint64_t k = 1;
-    int dice = (sign & (j << (depth * 6))) >> (depth * 6);
+		uint64_t k = 1, j = 63;
+		int dice = (sign & (j << (depth * 6))) >> (depth * 6);
 		k = k << dice;
 		uint64_t m = (k - 1) & parent->branch.bitmap;
 		uint32_t start = compute_bits(m);

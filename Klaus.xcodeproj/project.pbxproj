@@ -38,7 +38,7 @@
 /* Begin PBXFileReference section */
 		400248AB199323D500BF6D61 /* ccvResources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ccvResources; path = ccv/ccvResources; sourceTree = SOURCE_ROOT; };
 		400248B01993376900BF6D61 /* KLWordNetSynset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KLWordNetSynset.swift; sourceTree = "<group>"; };
-		400248B61993415100BF6D61 /* libccv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libccv.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		400248B61993415100BF6D61 /* libccv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libccv.a; path = /Users/Tracy/Documents/robin/project/klaus/ccv/libccv.a; sourceTree = "<absolute>"; };
 		400248B8199341B000BF6D61 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		400248BA199341BE00BF6D61 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		400248BD1993434700BF6D61 /* KLClassificationResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KLClassificationResult.swift; sourceTree = "<group>"; };
@@ -215,6 +215,7 @@
 				TargetAttributes = {
 					4003D4BA1993132D008965F0 = {
 						CreatedOnToolsVersion = 6.0;
+						DevelopmentTeam = 27339BXENH;
 					};
 					4003D4CC1993132D008965F0 = {
 						CreatedOnToolsVersion = 6.0;
@@ -380,19 +381,25 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEFINES_MODULE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/Headers",
 					"$(inherited)",
 					"/Applications/Xcode6-Beta5.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+					/Users/Tracy/robin/project/klaus/ccv,
 				);
 				INFOPLIST_FILE = Klaus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/DerivedData/Klaus/Build/Products/Debug-iphoneos",
+					/Users/Tracy/robin/project/klaus/ccv,
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Klaus/Klaus-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -404,19 +411,26 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEFINES_MODULE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/Headers",
 					"$(inherited)",
 					"/Applications/Xcode6-Beta5.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+					/Users/Tracy/robin/project/klaus/ccv,
 				);
 				INFOPLIST_FILE = Klaus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/DerivedData/Klaus/Build/Products/Debug-iphoneos",
+					/Users/Tracy/robin/project/klaus/ccv,
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Klaus/Klaus-Bridging-Header.h";
 			};
 			name = Release;

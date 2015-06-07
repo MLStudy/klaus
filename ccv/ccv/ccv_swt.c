@@ -666,7 +666,7 @@ ccv_array_t* ccv_swt_detect_words(ccv_dense_matrix_t* a, ccv_swt_param_t params)
 			for (i = 0; i < textline->rnum; i++)
 			{
 				ccv_textline_t* r = (ccv_textline_t*)ccv_array_get(textline, i);
-				k = *(int*)ccv_array_get(idx, i);
+				int k = *(int*)ccv_array_get(idx, i);
 				ccv_textline_t* r2 = (ccv_textline_t*)ccv_array_get(textline2, k);
 				if (r2->rect.width < r->rect.width)
 				{
@@ -696,7 +696,7 @@ ccv_array_t* ccv_swt_detect_words(ccv_dense_matrix_t* a, ccv_swt_param_t params)
 				ccv_textline_t* r = (ccv_textline_t*)ccv_array_get(textline, i);
 				if (r->letters)
 					ccfree(r->letters);
-				k = *(int*)ccv_array_get(idx, i);
+				int k = *(int*)ccv_array_get(idx, i);
 				ccv_rect_t* r2 = (ccv_rect_t*)ccv_array_get(words, k);
 				if (r2->width * r2->height < r->rect.width * r->rect.height)
 					*r2 = r->rect;
@@ -732,7 +732,7 @@ ccv_array_t* ccv_swt_detect_words(ccv_dense_matrix_t* a, ccv_swt_param_t params)
 		for (i = 0; i < all_words->rnum; i++)
 		{
 			ccv_rect_t* r1 = (ccv_rect_t*)ccv_array_get(all_words, i);
-			k = *(int*)ccv_array_get(idx, i);
+			int k = *(int*)ccv_array_get(idx, i);
 			ccv_comp_t* r2 = (ccv_comp_t*)ccv_array_get(new_words, k);
 			if (r2->neighbors)
 			{

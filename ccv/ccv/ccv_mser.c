@@ -138,7 +138,7 @@ static void _ccv_set_union_mser(ccv_dense_matrix_t* a, ccv_dense_matrix_t* h, cc
 		int range_segment_cap = buck[params.direction == CCV_DARK_TO_BRIGHT ? v + 1 : params.range - v + 1];
 		for (i = range_segment; i < range_segment_cap; i++)
 		{
-			pnode = rnode[i];
+			ccv_mser_node_t* pnode = rnode[i];
 			// try to merge pnode with its neighbors
 			static int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
 			static int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -164,9 +164,9 @@ static void _ccv_set_union_mser(ccv_dense_matrix_t* a, ccv_dense_matrix_t* h, cc
 												|| (root1->value == root0->value && root1->rank == root0->rank && root1->size > root0->size)))
 							|| (root1 && !root0))
 						{
-							ccv_mser_node_t* exnode = node0;
+							ccv_mser_node_t* node = node0;
 							node0 = node1;
-							node1 = exnode;
+							node1 = node;
 							ccv_mser_history_t* root = root0;
 							root0 = root1;
 							root1 = root;
@@ -311,26 +311,26 @@ static void _ccv_set_union_mser(ccv_dense_matrix_t* a, ccv_dense_matrix_t* h, cc
 		ccv_mser_history_t* er = (ccv_mser_history_t*)ccv_array_get(history_list, i); \
 		if (er->stable) \
 		{ \
-			ccv_mser_node_t* head_node = er->head; \
+			ccv_mser_node_t* node = er->head; \
 			ccv_mser_keypoint_t mser_keypoint = { \
 				.size = er->size, \
-				.keypoint = head_node->point, \
+				.keypoint = node->point, \
 				.m10 = 0, .m01 = 0, .m11 = 0, \
 				.m20 = 0, .m02 = 0, \
 			}; \
-			ccv_point_t min_point = head_node->point, \
-						max_point = head_node->point; \
+			ccv_point_t min_point = node->point, \
+						max_point = node->point; \
 			for (j = 0; j < er->size; j++) \
 			{ \
-				if (_for_get(b_ptr + head_node->point.y * b->step, head_node->point.x, 0) == 0) \
-					_for_set(b_ptr + head_node->point.y * b->step, head_node->point.x, seq_no, 0); \
-				min_point.x = ccv_min(min_point.x, head_node->point.x); \
-				min_point.y = ccv_min(min_point.y, head_node->point.y); \
-				max_point.x = ccv_max(max_point.x, head_node->point.x); \
-				max_point.y = ccv_max(max_point.y, head_node->point.y); \
-				head_node = head_node->next; \
+				if (_for_get(b_ptr + node->point.y * b->step, node->point.x, 0) == 0) \
+					_for_set(b_ptr + node->point.y * b->step, node->point.x, seq_no, 0); \
+				min_point.x = ccv_min(min_point.x, node->point.x); \
+				min_point.y = ccv_min(min_point.y, node->point.y); \
+				max_point.x = ccv_max(max_point.x, node->point.x); \
+				max_point.y = ccv_max(max_point.y, node->point.y); \
+				node = node->next; \
 			} \
-			assert(head_node->prev == er->tail); /* endless double link list */ \
+			assert(node->prev == er->tail); /* endless double link list */ \
 			mser_keypoint.rect = ccv_rect(min_point.x, min_point.y, max_point.x - min_point.x + 1, max_point.y - min_point.y + 1); \
 			ccv_array_push(seq, &mser_keypoint); \
 			++seq_no; \
@@ -690,9 +690,9 @@ static void _ccv_mscr(ccv_dense_matrix_t* a, ccv_dense_matrix_t* h, ccv_dense_ma
 										|| (root1->rank == root0->rank && root1->size > root0->size)))
 					|| (root1 && !root0))
 				{
-					ccv_mser_node_t* exnode = node0;
+					ccv_mser_node_t* node = node0;
 					node0 = node1;
-					node1 = exnode;
+					node1 = node;
 					ccv_mscr_root_t* root = root0;
 					root0 = root1;
 					root1 = root;
@@ -812,27 +812,27 @@ static void _ccv_mscr(ccv_dense_matrix_t* a, ccv_dense_matrix_t* h, ccv_dense_ma
 		ccv_mscr_area_t* mscr_area = (ccv_mscr_area_t*)ccv_array_get(mscr_area_list, i); \
 		if (mscr_area->seq_no > 0) \
 		{ \
-			ccv_mser_node_t* head_node = mscr_area->head; \
+			ccv_mser_node_t* node = mscr_area->head; \
 			ccv_mser_keypoint_t mser_keypoint = { \
 				.size = mscr_area->size, \
-				.keypoint = head_node->point, \
+				.keypoint = node->point, \
 				.m10 = 0, .m01 = 0, .m11 = 0, \
 				.m20 = 0, .m02 = 0, \
 			}; \
-			ccv_point_t min_point = head_node->point, \
-						max_point = head_node->point; \
+			ccv_point_t min_point = node->point, \
+						max_point = node->point; \
 			for (j = 0; j < mscr_area->size; j++) \
 			{ \
-				if (_for_get(b_ptr + head_node->point.y * b->step, head_node->point.x, 0) == 0) \
-					_for_set(b_ptr + head_node->point.y * b->step, head_node->point.x, mscr_area->seq_no, 0); \
-				min_point.x = ccv_min(min_point.x, head_node->point.x); \
-				min_point.y = ccv_min(min_point.y, head_node->point.y); \
-				max_point.x = ccv_max(max_point.x, head_node->point.x); \
-				max_point.y = ccv_max(max_point.y, head_node->point.y); \
-				head_node = head_node->next; \
+				if (_for_get(b_ptr + node->point.y * b->step, node->point.x, 0) == 0) \
+					_for_set(b_ptr + node->point.y * b->step, node->point.x, mscr_area->seq_no, 0); \
+				min_point.x = ccv_min(min_point.x, node->point.x); \
+				min_point.y = ccv_min(min_point.y, node->point.y); \
+				max_point.x = ccv_max(max_point.x, node->point.x); \
+				max_point.y = ccv_max(max_point.y, node->point.y); \
+				node = node->next; \
 			} \
 			assert(max_point.x - min_point.x > 1 && max_point.y - min_point.y > 1); \
-			assert(head_node->prev == mscr_area->tail); /* endless double link list */ \
+			assert(node->prev == mscr_area->tail); /* endless double link list */ \
 			mser_keypoint.rect = ccv_rect(min_point.x, min_point.y, max_point.x - min_point.x + 1, max_point.y - min_point.y + 1); \
 			ccv_array_push(seq, &mser_keypoint); \
 		} \

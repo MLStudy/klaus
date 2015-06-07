@@ -38,8 +38,8 @@
 
 - (NSArray *)classify:(CGImageRef)image
 {
-  int width = CGImageGetWidth(image);
-  int height = CGImageGetHeight(image);
+  int width = (int)CGImageGetWidth(image);
+  int height = (int)CGImageGetHeight(image);
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
   CGContextRef context = CGBitmapContextCreate(0, width, height, 8, width * 4, colorSpace, kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast);
   CGColorSpaceRelease(colorSpace);
@@ -49,7 +49,7 @@
   ccv_read(data, &a, CCV_IO_RGBA_RAW | CCV_IO_RGB_COLOR, height, width, width * 4);
   CGContextRelease(context);
   ccv_dense_matrix_t *classiable = 0;
-  ccv_convnet_input_formation(_convnet, a, &classiable);
+  ccv_convnet_input_formation(_convnet->input, a, &classiable);
   ccv_array_t *ranks = 0;
   ccv_convnet_classify(_convnet, &classiable, 1, &ranks, 5, 1);
   ccv_matrix_free(classiable);

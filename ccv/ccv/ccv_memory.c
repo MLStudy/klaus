@@ -27,11 +27,11 @@ ccv_dense_matrix_t* ccv_dense_matrix_new(int rows, int cols, int type, void* dat
 	ccv_dense_matrix_t* mat;
 	if (ccv_cache_opt && sig != 0 && !data && !(type & CCV_NO_DATA_ALLOC))
 	{
-		uint8_t cache_type;
-		mat = (ccv_dense_matrix_t*)ccv_cache_out(&ccv_cache, sig, &cache_type);
+		uint8_t type;
+		mat = (ccv_dense_matrix_t*)ccv_cache_out(&ccv_cache, sig, &type);
 		if (mat)
 		{
-			assert(cache_type == 0);
+			assert(type == 0);
 			mat->type |= CCV_GARBAGE; // set the flag so the upper level function knows this is from recycle-bin
 			mat->refcount = 1;
 			return mat;

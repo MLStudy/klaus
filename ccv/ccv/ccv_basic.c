@@ -17,48 +17,180 @@ void ccv_sobel(ccv_dense_matrix_t* a, ccv_dense_matrix_t** b, int type, int dx, 
 	int i, j, k, c, ch = CCV_GET_CHANNEL(a->type);
 	unsigned char* a_ptr = a->data.u8;
 	unsigned char* b_ptr = db->data.u8;
-	if (dx == 1 || dy == 1)
+	if (dx == 1 && dy == 0)
 	{
+		assert(a->cols >= 3);
 		/* special case 1: 1x3 or 3x1 window */
-		if (dx > dy)
-		{
 #define for_block(_for_get, _for_set) \
-			for (i = 0; i < a->rows; i++) \
-			{ \
+		for (i = 0; i < a->rows; i++) \
+		{ \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, k, 2 * (_for_get(a_ptr, ch + k, 0) - _for_get(a_ptr, k, 0)), 0); \
+			for (j = 1; j < a->cols - 1; j++) \
 				for (k = 0; k < ch; k++) \
-					_for_set(b_ptr, k, _for_get(a_ptr, ch + k, 0) - _for_get(a_ptr, k, 0), 0); \
-				for (j = 1; j < a->cols - 1; j++) \
-					for (k = 0; k < ch; k++) \
-						_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr, (j + 1) * ch + k, 0) - _for_get(a_ptr, (j - 1) * ch + k, 0)), 0); \
-				for (k = 0; k < ch; k++) \
-					_for_set(b_ptr, (a->cols - 1) * ch + k, _for_get(a_ptr, (a->cols - 1) * ch + k, 0) - _for_get(a_ptr, (a->cols - 2) * ch + k, 0), 0); \
-				b_ptr += db->step; \
-				a_ptr += a->step; \
-			}
-			ccv_matrix_getter(a->type, ccv_matrix_setter, db->type, for_block);
+					_for_set(b_ptr, j * ch + k, _for_get(a_ptr, (j + 1) * ch + k, 0) - _for_get(a_ptr, (j - 1) * ch + k, 0), 0); \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, (a->cols - 1) * ch + k, 2 * (_for_get(a_ptr, (a->cols - 1) * ch + k, 0) - _for_get(a_ptr, (a->cols - 2) * ch + k, 0)), 0); \
+			b_ptr += db->step; \
+			a_ptr += a->step; \
+		}
+		ccv_matrix_getter(a->type, ccv_matrix_setter, db->type, for_block);
 #undef for_block
-		} else {
+	} else if (dx == 0 && dy == 1) {
+		assert(a->rows >= 3);
+		/* special case 1: 1x3 or 3x1 window */
 #define for_block(_for_get, _for_set) \
+		for (j = 0; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr, j * ch + k, 0)), 0); \
+		a_ptr += a->step; \
+		b_ptr += db->step; \
+		for (i = 1; i < a->rows - 1; i++) \
+		{ \
 			for (j = 0; j < a->cols; j++) \
 				for (k = 0; k < ch; k++) \
-					_for_set(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr, j * ch + k, 0), 0); \
+					_for_set(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
 			a_ptr += a->step; \
 			b_ptr += db->step; \
-			for (i = 1; i < a->rows - 1; i++) \
-			{ \
-				for (j = 0; j < a->cols; j++) \
-					for (k = 0; k < ch; k++) \
-						_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0)), 0); \
-				a_ptr += a->step; \
-				b_ptr += db->step; \
-			} \
+		} \
+		for (j = 0; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0)), 0);
+		ccv_matrix_getter(a->type, ccv_matrix_setter, db->type, for_block);
+#undef for_block
+	} else if ((dx == 1 && dy == 1) || (dx == -1 && dy == -1)) {
+		/* special case 2: 3x3 window with diagonal direction */
+		assert(a->rows >= 3 && a->cols >= 3);
+#define for_block(_for_get, _for_set) \
+		for (j = 0; j < a->cols - 1; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr + a->step, (j + 1) * ch + k, 0) - _for_get(a_ptr, j * ch + k, 0)), 0); \
+		for (k = 0; k < ch; k++) \
+			_for_set(b_ptr, (a->cols - 1) * ch + k, 2 * (_for_get(a_ptr + a->step, (a->cols - 1) * ch + k, 0) - _for_get(a_ptr, (a->cols - 1) * ch + k, 0)), 0); \
+		a_ptr += a->step; \
+		b_ptr += db->step; \
+		for (i = 1; i < a->rows - 1; i++) \
+		{ \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, k, 2 * (_for_get(a_ptr + a->step, ch + k, 0) - _for_get(a_ptr, k, 0)), 0); \
+			for (j = 1; j < a->cols - 1; j++) \
+				for (k = 0; k < ch; k++) \
+					_for_set(b_ptr, j * ch + k, _for_get(a_ptr + a->step, (j + 1) * ch + k, 0) - _for_get(a_ptr - a->step, (j - 1) * ch + k, 0), 0); \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, (a->cols - 1) * ch + k, 2 * (_for_get(a_ptr, (a->cols - 1) * ch + k, 0) - _for_get(a_ptr - a->step, (a->cols - 2) * ch + k, 0)), 0); \
+			a_ptr += a->step; \
+			b_ptr += db->step; \
+		} \
+		for (k = 0; k < ch; k++) \
+			_for_set(b_ptr, k, 2 * (_for_get(a_ptr, k, 0) - _for_get(a_ptr - a->step, k, 0)), 0); \
+		for (j = 1; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr, j * ch + k, 0) - _for_get(a_ptr - a->step, (j - 1) * ch + k, 0)), 0);
+		ccv_matrix_getter(a->type, ccv_matrix_setter, db->type, for_block);
+#undef for_block
+	} else if ((dx == 1 && dy == -1) || (dx == -1 && dy == 1)) {
+		/* special case 2: 3x3 window with diagonal direction */
+		assert(a->rows >= 3 && a->cols >= 3);
+#define for_block(_for_get, _for_set) \
+		for (k = 0; k < ch; k++) \
+			_for_set(b_ptr, k, 2 * (_for_get(a_ptr + a->step, k, 0) - _for_get(a_ptr, k, 0)), 0); \
+		for (j = 1; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr + a->step, (j - 1) * ch + k, 0) - _for_get(a_ptr, j * ch + k, 0)), 0); \
+		a_ptr += a->step; \
+		b_ptr += db->step; \
+		for (i = 1; i < a->rows - 1; i++) \
+		{ \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, k, 2 * (_for_get(a_ptr, k, 0) - _for_get(a_ptr - a->step, ch + k, 0)), 0); \
+			for (j = 1; j < a->cols - 1; j++) \
+				for (k = 0; k < ch; k++) \
+					_for_set(b_ptr, j * ch + k, _for_get(a_ptr + a->step, (j - 1) * ch + k, 0) - _for_get(a_ptr - a->step, (j + 1) * ch + k, 0), 0); \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, (a->cols - 1) * ch + k, 2 * (_for_get(a_ptr + a->step, (a->cols - 2) * ch + k, 0) - _for_get(a_ptr, (a->cols - 1) * ch + k, 0)), 0); \
+			a_ptr += a->step; \
+			b_ptr += db->step; \
+		} \
+		for (j = 0; j < a->cols - 1; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set(b_ptr, j * ch + k, 2 * (_for_get(a_ptr, j * ch + k, 0) - _for_get(a_ptr - a->step, (j + 1) * ch + k, 0)), 0); \
+		for (k = 0; k < ch; k++) \
+			_for_set(b_ptr, (a->cols - 1) * ch + k, 2 * (_for_get(a_ptr, (a->cols - 1) * ch + k, 0) - _for_get(a_ptr - a->step, (a->cols - 1) * ch + k, 0)), 0);
+		ccv_matrix_getter(a->type, ccv_matrix_setter, db->type, for_block);
+#undef for_block
+	} else if (dx == 3 && dy == 0) {
+		assert(a->rows >= 3 && a->cols >= 3);
+		/* special case 3: 3x3 window, corresponding sigma = 0.85 */
+		unsigned char* buf = (unsigned char*)alloca(db->step);
+#define for_block(_for_get, _for_set_b, _for_get_b) \
+		for (j = 0; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) + 3 * _for_get(a_ptr, j * ch + k, 0), 0); \
+		a_ptr += a->step; \
+		b_ptr += db->step; \
+		for (i = 1; i < a->rows - 1; i++) \
+		{ \
 			for (j = 0; j < a->cols; j++) \
 				for (k = 0; k < ch; k++) \
-					_for_set(b_ptr, j * ch + k, _for_get(a_ptr, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0), 0);
-			ccv_matrix_getter(a->type, ccv_matrix_setter, db->type, for_block);
-#undef for_block
+					_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) + 2 * _for_get(a_ptr, j * ch + k, 0) + _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
+			a_ptr += a->step; \
+			b_ptr += db->step; \
+		} \
+		for (j = 0; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(b_ptr, j * ch + k, 3 * _for_get(a_ptr, j * ch + k, 0) + _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
+		b_ptr = db->data.u8; \
+		for (i = 0; i < a->rows; i++) \
+		{ \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(buf, k, _for_get_b(b_ptr, ch + k, 0) - _for_get_b(b_ptr, k, 0), 0); \
+			for (j = 1; j < a->cols - 1; j++) \
+				for (k = 0; k < ch; k++) \
+					_for_set_b(buf, j * ch + k, _for_get_b(b_ptr, (j + 1) * ch + k, 0) - _for_get_b(b_ptr, (j - 1) * ch + k, 0), 0); \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(buf, (a->cols - 1) * ch + k, _for_get_b(b_ptr, (a->cols - 1) * ch + k, 0) - _for_get_b(b_ptr, (a->cols - 2) * ch + k, 0), 0); \
+			memcpy(b_ptr, buf, db->step); \
+			b_ptr += db->step; \
 		}
-	} else if (dx > 3 || dy > 3) {
+		ccv_matrix_getter(a->type, ccv_matrix_setter_getter, db->type, for_block);
+#undef for_block
+	} else if (dx == 0 && dy == 3) {
+		assert(a->rows >= 3 && a->cols >= 3);
+		/* special case 3: 3x3 window, corresponding sigma = 0.85 */
+		unsigned char* buf = (unsigned char*)alloca(db->step);
+#define for_block(_for_get, _for_set_b, _for_get_b) \
+		for (j = 0; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr, j * ch + k, 0), 0); \
+		a_ptr += a->step; \
+		b_ptr += db->step; \
+		for (i = 1; i < a->rows - 1; i++) \
+		{ \
+			for (j = 0; j < a->cols; j++) \
+				for (k = 0; k < ch; k++) \
+					_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
+			a_ptr += a->step; \
+			b_ptr += db->step; \
+		} \
+		for (j = 0; j < a->cols; j++) \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
+		b_ptr = db->data.u8; \
+		for (i = 0; i < a->rows; i++) \
+		{ \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(buf, k, _for_get_b(b_ptr, ch + k, 0) + 3 * _for_get_b(b_ptr, k, 0), 0); \
+			for (j = 1; j < a->cols - 1; j++) \
+				for (k = 0; k < ch; k++) \
+					_for_set_b(buf, j * ch + k, _for_get_b(b_ptr, (j + 1) * ch + k, 0) + 2 * _for_get_b(b_ptr, j * ch + k, 0) + _for_get_b(b_ptr, (j - 1) * ch + k, 0), 0); \
+			for (k = 0; k < ch; k++) \
+				_for_set_b(buf, (a->cols - 1) * ch + k, _for_get_b(b_ptr, (a->cols - 2) * ch + k, 0) + 3 * _for_get_b(b_ptr, (a->cols - 1) * ch + k, 0), 0); \
+			memcpy(b_ptr, buf, db->step); \
+			b_ptr += db->step; \
+		}
+		ccv_matrix_getter(a->type, ccv_matrix_setter_getter, db->type, for_block);
+#undef for_block
+	} else {
 		/* general case: in this case, I will generate a separable filter, and do the convolution */
 		int fsz = ccv_max(dx, dy);
 		assert(fsz % 2 == 1);
@@ -147,77 +279,6 @@ void ccv_sobel(ccv_dense_matrix_t* a, ccv_dense_matrix_t** b, int type, int dx, 
 		}
 		ccv_matrix_getter(a->type, ccv_matrix_typeof_setter_getter, db->type, for_block);
 #undef for_block
-	} else {
-		/* special case 2: 3x3 window, corresponding sigma = 0.85 */
-		unsigned char* buf = (unsigned char*)alloca(db->step);
-		if (dx > dy)
-		{
-#define for_block(_for_get, _for_set_b, _for_get_b) \
-			for (j = 0; j < a->cols; j++) \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) + 3 * _for_get(a_ptr, j * ch + k, 0), 0); \
-			a_ptr += a->step; \
-			b_ptr += db->step; \
-			for (i = 1; i < a->rows - 1; i++) \
-			{ \
-				for (j = 0; j < a->cols; j++) \
-					for (k = 0; k < ch; k++) \
-						_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) + 2 * _for_get(a_ptr, j * ch + k, 0) + _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
-				a_ptr += a->step; \
-				b_ptr += db->step; \
-			} \
-			for (j = 0; j < a->cols; j++) \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(b_ptr, j * ch + k, 3 * _for_get(a_ptr, j * ch + k, 0) + _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
-			b_ptr = db->data.u8; \
-			for (i = 0; i < a->rows; i++) \
-			{ \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(buf, k, _for_get_b(b_ptr, ch + k, 0) - _for_get_b(b_ptr, k, 0), 0); \
-				for (j = 1; j < a->cols - 1; j++) \
-					for (k = 0; k < ch; k++) \
-						_for_set_b(buf, j * ch + k, _for_get_b(b_ptr, (j + 1) * ch + k, 0) - _for_get_b(b_ptr, (j - 1) * ch + k, 0), 0); \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(buf, (a->cols - 1) * ch + k, _for_get_b(b_ptr, (a->cols - 1) * ch + k, 0) - _for_get_b(b_ptr, (a->cols - 2) * ch + k, 0), 0); \
-				memcpy(b_ptr, buf, db->step); \
-				b_ptr += db->step; \
-			}
-			ccv_matrix_getter(a->type, ccv_matrix_setter_getter, db->type, for_block);
-#undef for_block
-		} else {
-#define for_block(_for_get, _for_set_b, _for_get_b) \
-			for (j = 0; j < a->cols; j++) \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr, j * ch + k, 0), 0); \
-			a_ptr += a->step; \
-			b_ptr += db->step; \
-			for (i = 1; i < a->rows - 1; i++) \
-			{ \
-				for (j = 0; j < a->cols; j++) \
-					for (k = 0; k < ch; k++) \
-						_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr + a->step, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
-				a_ptr += a->step; \
-				b_ptr += db->step; \
-			} \
-			for (j = 0; j < a->cols; j++) \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(b_ptr, j * ch + k, _for_get(a_ptr, j * ch + k, 0) - _for_get(a_ptr - a->step, j * ch + k, 0), 0); \
-			b_ptr = db->data.u8; \
-			for (i = 0; i < a->rows; i++) \
-			{ \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(buf, k, _for_get_b(b_ptr, ch + k, 0) + 3 * _for_get_b(b_ptr, k, 0), 0); \
-				for (j = 1; j < a->cols - 1; j++) \
-					for (k = 0; k < ch; k++) \
-						_for_set_b(buf, j * ch + k, _for_get_b(b_ptr, (j + 1) * ch + k, 0) + 2 * _for_get_b(b_ptr, j * ch + k, 0) + _for_get_b(b_ptr, (j - 1) * ch + k, 0), 0); \
-				for (k = 0; k < ch; k++) \
-					_for_set_b(buf, (a->cols - 1) * ch + k, _for_get_b(b_ptr, (a->cols - 2) * ch + k, 0) + 3 * _for_get_b(b_ptr, (a->cols - 1) * ch + k, 0), 0); \
-				memcpy(b_ptr, buf, db->step); \
-				b_ptr += db->step; \
-			}
-			ccv_matrix_getter(a->type, ccv_matrix_setter_getter, db->type, for_block);
-#undef for_block
-		}
 	}
 }
 
@@ -433,46 +494,4 @@ void ccv_blur(ccv_dense_matrix_t* a, ccv_dense_matrix_t** b, int type, double si
 	}
 	ccv_matrix_typeof_setter_getter(no_8u_type, ccv_matrix_setter_getter, db->type, for_block);
 #undef for_block
-}
-
-static void _ccv_rgb_to_yuv(ccv_dense_matrix_t* a, ccv_dense_matrix_t* b)
-{
-	unsigned char* a_ptr = a->data.u8;
-	unsigned char* b_ptr = b->data.u8;
-	int i, j;
-#define for_block(_for_get, _for_set_b, _for_get_b) \
-	for (i = 0; i < a->rows; i++) \
-	{ \
-		for (j = 0; j < a->cols; j++) \
-		{ \
-			_for_set_b(b_ptr, j * 3, (_for_get(a_ptr, j * 3, 0) * 1225 + _for_get(a_ptr, j * 3 + 1, 0) * 2404 + _for_get(a_ptr, j * 3 + 2, 0) * 467) / 4096, 0); \
-			_for_set_b(b_ptr, j * 3 + 1, (_for_get(a_ptr, j * 3 + 2, 0) - _for_get_b(b_ptr, j * 3, 0)) * 2015 / 4096 + 128, 0); \
-			_for_set_b(b_ptr, j * 3 + 2, (_for_get(a_ptr, j * 3, 0) - _for_get_b(b_ptr, j * 3, 0)) * 3592 / 4096 + 128, 0); \
-		} \
-		a_ptr += a->step; \
-		b_ptr += b->step; \
-	}
-	ccv_matrix_getter(a->type, ccv_matrix_setter_getter, b->type, for_block);
-#undef for_block
-}
-
-void ccv_color_transform(ccv_dense_matrix_t* a, ccv_dense_matrix_t** b, int type, int flag)
-{
-	ccv_declare_derived_signature(sig, a->sig != 0, ccv_sign_with_format(64, "ccv_color_transform(%d)", flag), a->sig, CCV_EOF_SIGN);
-	assert(flag == CCV_RGB_TO_YUV);
-	switch (flag)
-	{
-		case CCV_RGB_TO_YUV:
-			assert(CCV_GET_CHANNEL(a->type) == CCV_C3);
-			type = (type == 0) ? CCV_GET_DATA_TYPE(a->type) | CCV_C3 : CCV_GET_DATA_TYPE(type) | CCV_C3;
-			break;
-	}
-	ccv_dense_matrix_t* db = *b = ccv_dense_matrix_renew(*b, a->rows, a->cols, CCV_ALL_DATA_TYPE | CCV_C3, type, sig);
-	ccv_object_return_if_cached(, db);
-	switch (flag)
-	{
-		case CCV_RGB_TO_YUV:
-			_ccv_rgb_to_yuv(a, db);
-			break;
-	}
 }

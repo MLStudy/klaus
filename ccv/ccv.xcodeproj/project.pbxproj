@@ -320,6 +320,7 @@
 				FRAMEWORK_SEARCH_PATHS = "$(inherited) ";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited) ";
+				ONLY_ACTIVE_ARCH = NO;
 				PUBLIC_HEADERS_FOLDER_PATH = ./Headers/$TARGET_NAME;
 				SDKROOT = iphoneos;
 				TARGET_NAME = ccv;
@@ -361,6 +362,7 @@
 				FRAMEWORK_SEARCH_PATHS = "$(inherited) ";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited) ";
+				ONLY_ACTIVE_ARCH = YES;
 				PUBLIC_HEADERS_FOLDER_PATH = ./Headers/$TARGET_NAME;
 				SDKROOT = iphoneos;
 				TARGET_NAME = ccv;

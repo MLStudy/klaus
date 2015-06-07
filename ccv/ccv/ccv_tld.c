@@ -636,8 +636,8 @@ ccv_tld_t* ccv_tld_new(ccv_dense_matrix_t* a, ccv_rect_t box, ccv_tld_param_t pa
 		{
 			// needs to get it out first, otherwise the pointer may be invalid
 			// soon (when we realloc the array in push).
-			ccv_comp_t comp_box = *(ccv_comp_t*)ccv_array_get(good, j);
-			ccv_array_push(good, &comp_box);
+			ccv_comp_t box = *(ccv_comp_t*)ccv_array_get(good, j);
+			ccv_array_push(good, &box);
 		}
 	int* idx = (int*)ccmalloc(sizeof(int) * (badex + good->rnum));
 	for (i = 0; i < badex + good->rnum; i++)
@@ -668,18 +668,18 @@ ccv_tld_t* ccv_tld_new(ccv_dense_matrix_t* a, ccv_rect_t box, ccv_tld_param_t pa
 			k = idx[j];
 			if (k < badex)
 			{
-				ccv_comp_t* pbox = (ccv_comp_t*)ccv_array_get(bad, k);
-				assert(pbox->neighbors >= 0 && pbox->neighbors < best_box.neighbors);
-				if (_ccv_tld_box_variance(sat, sqsat, pbox->rect) > tld->var_thres * 0.5)
+				ccv_comp_t* box = (ccv_comp_t*)ccv_array_get(bad, k);
+				assert(box->neighbors >= 0 && box->neighbors < best_box.neighbors);
+				if (_ccv_tld_box_variance(sat, sqsat, box->rect) > tld->var_thres * 0.5)
 				{
-					_ccv_tld_ferns_feature_for(tld->ferns, ga, *pbox, fern, 0, 0, 0, 0);
+					_ccv_tld_ferns_feature_for(tld->ferns, ga, *box, fern, 0, 0, 0, 0);
 					// fix the thresholding for negative
 					if (ccv_ferns_predict(tld->ferns, fern) >= tld->ferns->threshold)
 						ccv_ferns_correct(tld->ferns, fern, 0, 2);
 				}
 			} else {
-				ccv_comp_t* pbox = (ccv_comp_t*)ccv_array_get(good, k - badex);
-				_ccv_tld_ferns_feature_for(tld->ferns, ga, *pbox, fern, dsfmt, params.new_deform_angle, params.new_deform_scale, params.new_deform_shift);
+				ccv_comp_t* box = (ccv_comp_t*)ccv_array_get(good, k - badex);
+				_ccv_tld_ferns_feature_for(tld->ferns, ga, *box, fern, dsfmt, params.new_deform_angle, params.new_deform_scale, params.new_deform_shift);
 				// fix the thresholding for positive
 				if (ccv_ferns_predict(tld->ferns, fern) <= tld->ferns->threshold)
 					ccv_ferns_correct(tld->ferns, fern, 1, 2);
@@ -693,11 +693,11 @@ ccv_tld_t* ccv_tld_new(ccv_dense_matrix_t* a, ccv_rect_t box, ccv_tld_param_t pa
 	// train the nearest-neighbor classifier
 	for (i = 0, k = 0; i < bad->rnum && k < params.bad_patches; i++)
 	{
-		ccv_comp_t* pbox = (ccv_comp_t*)ccv_array_get(bad, i);
-		if (_ccv_tld_box_variance(sat, sqsat, pbox->rect) > tld->var_thres * 0.5)
+		ccv_comp_t* box = (ccv_comp_t*)ccv_array_get(bad, i);
+		if (_ccv_tld_box_variance(sat, sqsat, box->rect) > tld->var_thres * 0.5)
 		{
-			b = 0;
-			_ccv_tld_fetch_patch(tld, ga, &b, 0, pbox->rect);
+			ccv_dense_matrix_t* b = 0;
+			_ccv_tld_fetch_patch(tld, ga, &b, 0, box->rect);
 			if (_ccv_tld_sv_correct(tld, b, 0) != 0)
 				ccv_matrix_free(b);
 			++k;
@@ -803,7 +803,7 @@ static int _ccv_tld_quick_learn(ccv_tld_t* tld, ccv_dense_matrix_t* ga, ccv_dens
 		ccv_array_free(good);
 		ccfree(idx);
 		// train the nearest-neighbor classifier
-		b = 0;
+		ccv_dense_matrix_t* b = 0;
 		_ccv_tld_fetch_patch(tld, ga, &b, 0, best_box.rect);
 		if (_ccv_tld_sv_correct(tld, b, 1) != 0)
 			ccv_matrix_free(b);
@@ -812,7 +812,7 @@ static int _ccv_tld_quick_learn(ccv_tld_t* tld, ccv_dense_matrix_t* ga, ccv_dens
 			ccv_comp_t* box = (ccv_comp_t*)ccv_array_get(tld->top, i);
 			if (_ccv_tld_rect_intersect(box->rect, best_box.rect) < tld->params.exclude_overlap)
 			{
-				b = 0;
+				ccv_dense_matrix_t* b = 0;
 				_ccv_tld_fetch_patch(tld, ga, &b, 0, box->rect);
 				if (_ccv_tld_sv_correct(tld, b, 0) != 0)
 					ccv_matrix_free(b);
